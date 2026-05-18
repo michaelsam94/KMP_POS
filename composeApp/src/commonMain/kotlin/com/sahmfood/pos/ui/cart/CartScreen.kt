@@ -78,11 +78,20 @@ fun CartScreen(
     var showProductPicker by remember { mutableStateOf(false) }
     var showBarcodeDialog by remember { mutableStateOf(false) }
 
+    val orderItems = state.order?.items.orEmpty()
+
     // Show errors as snackbar
     LaunchedEffect(state.error) {
         state.error?.let {
             scope.launch { snackbar.showSnackbar(it) }
             viewModel.clearError()
+        }
+    }
+
+    LaunchedEffect(state.order?.id) {
+        if (state.order == null) {
+            showProductPicker = false
+            showBarcodeDialog = false
         }
     }
 
@@ -129,18 +138,21 @@ fun CartScreen(
                     .fillMaxSize()
                     .padding(padding),
         ) {
-            if (state.isLoading) {
-                LoadingOverlay()
-            }
-
-            if (state.order?.items.isNullOrEmpty()) {
-                EmptyCartPlaceholder(modifier = Modifier.weight(1f))
-            } else {
+            when {
+                state.isLoading && orderItems.isEmpty() -> {
+                    Box(modifier = Modifier.weight(1f)) {
+                        LoadingOverlay()
+                    }
+                }
+                orderItems.isEmpty() -> {
+                    EmptyCartPlaceholder(modifier = Modifier.weight(1f))
+                }
+                else -> {
                 LazyColumn(
                     modifier = Modifier.weight(1f),
                     contentPadding = PaddingValues(vertical = 8.dp),
                 ) {
-                    items(state.order!!.items, key = { it.product.id }) { item ->
+                    items(orderItems, key = { it.product.id }) { item ->
                         CartItemRow(
                             item = item,
                             onIncrease = {
@@ -196,6 +208,7 @@ fun CartScreen(
                         ),
                 ) {
                     Text("Proceed to Payment", style = MaterialTheme.typography.titleMedium)
+                }
                 }
             }
         }
@@ -259,8 +272,21 @@ private fun ProductPickerDialog(
     onDismiss: () -> Unit,
 ) {
     var searchQuery by remember { mutableStateOf("") }
-    val categories = listOf("All") + DemoCatalog.products.map { it.category }.distinct()
+    val categories = remember { listOf("All") + DemoCatalog.products.map { it.category }.distinct() }
     var selectedTab by remember { mutableStateOf(0) }
+
+    LaunchedEffect(categories.size) {
+        if (selectedTab >= categories.size) selectedTab = 0
+    }
+
+    val selectedCategory = categories.getOrElse(selectedTab) { "All" }
+    val filtered =
+        remember(searchQuery, selectedCategory) {
+            DemoCatalog.products.filter { product ->
+                (selectedCategory == "All" || product.category == selectedCategory) &&
+                    (searchQuery.isBlank() || product.name.contains(searchQuery, ignoreCase = true))
+            }
+        }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -283,19 +309,11 @@ private fun ProductPickerDialog(
                         }
                     }
                 }
-                val filtered =
-                    DemoCatalog.products.filter { product ->
-                        (categories[selectedTab] == "All" || product.category == categories[selectedTab]) &&
-                            (searchQuery.isBlank() || product.name.contains(searchQuery, ignoreCase = true))
-                    }
-                Column(
-                    modifier =
-                        Modifier
-                            .heightIn(max = 360.dp)
-                            .verticalScroll(rememberScrollState()),
+                LazyColumn(
+                    modifier = Modifier.heightIn(max = 360.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-                    filtered.forEach { product ->
+                    items(filtered, key = { it.id }) { product ->
                         Surface(
                             onClick = { onProductSelected(product) },
                             shape = RoundedCornerShape(8.dp),
