@@ -6,10 +6,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -34,10 +36,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -89,10 +96,24 @@ fun PaymentScreen(
         return
     }
 
+    val canPay = viewModel.canConfirmPayment() && payState.order != null
+
     Scaffold(
         modifier = modifier,
         topBar = {
             TopAppBar(title = { Text("Payment", fontWeight = FontWeight.Bold) })
+        },
+        bottomBar = {
+            if (!payState.isLoading) {
+                PaymentBottomBar(
+                    canPay = canPay,
+                    isProcessing = payState.isProcessing,
+                    paymentMethod = payState.paymentMethod,
+                    error = payState.error,
+                    showHint = payState.order != null,
+                    onConfirm = { viewModel.processPayment() },
+                )
+            }
         },
     ) { padding ->
         if (payState.isLoading) {
@@ -190,47 +211,59 @@ fun PaymentScreen(
                 PaymentMethod.SPLIT -> Unit
             }
 
-            payState.error?.let {
-                Spacer(Modifier.height(12.dp))
-                ErrorBanner(it)
-            }
-
-            Spacer(Modifier.height(32.dp))
-
-            val canPay = viewModel.canConfirmPayment() && payState.order != null
-
-            Button(
-                onClick = { viewModel.processPayment() },
-                enabled = canPay && !payState.isProcessing,
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors =
-                    ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                    ),
-            ) {
-                if (payState.isProcessing) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        strokeWidth = 2.dp,
-                    )
-                } else {
-                    Text("Confirm Payment", style = MaterialTheme.typography.titleMedium)
-                }
-            }
-
-            if (!canPay && payState.order != null) {
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    hintForMethod(payState.paymentMethod),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                )
-            }
-
             Spacer(Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+private fun PaymentBottomBar(
+    canPay: Boolean,
+    isProcessing: Boolean,
+    paymentMethod: PaymentMethod,
+    error: String?,
+    showHint: Boolean,
+    onConfirm: () -> Unit,
+) {
+    Column(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .imePadding()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+    ) {
+        error?.let {
+            ErrorBanner(it)
+            Spacer(Modifier.height(8.dp))
+        }
+        Button(
+            onClick = onConfirm,
+            enabled = canPay && !isProcessing,
+            modifier = Modifier.fillMaxWidth().height(56.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors =
+                ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                ),
+        ) {
+            if (isProcessing) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    strokeWidth = 2.dp,
+                )
+            } else {
+                Text("Confirm Payment", style = MaterialTheme.typography.titleMedium)
+            }
+        }
+        if (!canPay && showHint) {
+            Spacer(Modifier.height(8.dp))
+            Text(
+                hintForMethod(paymentMethod),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+            )
         }
     }
 }
@@ -281,6 +314,10 @@ private fun CardPaymentSection(
     onExpiryChange: (String) -> Unit,
     onCvvChange: (String) -> Unit,
 ) {
+    val focusManager = LocalFocusManager.current
+    val expiryFocus = remember { FocusRequester() }
+    val cvvFocus = remember { FocusRequester() }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(2.dp),
@@ -296,7 +333,12 @@ private fun CardPaymentSection(
                 onValueChange = onCardNumberChange,
                 label = { Text("Card number") },
                 placeholder = { Text("0000 0000 0000 0000") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                keyboardOptions =
+                    KeyboardOptions(
+                        keyboardType = KeyboardType.Number,
+                        imeAction = ImeAction.Next,
+                    ),
+                keyboardActions = KeyboardActions(onNext = { expiryFocus.requestFocus() }),
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 visualTransformation = CardNumberVisualTransformation(),
@@ -307,19 +349,29 @@ private fun CardPaymentSection(
                     onValueChange = onExpiryChange,
                     label = { Text("Expiry (MMYY)") },
                     placeholder = { Text("1228") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    keyboardOptions =
+                        KeyboardOptions(
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Next,
+                        ),
+                    keyboardActions = KeyboardActions(onNext = { cvvFocus.requestFocus() }),
                     singleLine = true,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).focusRequester(expiryFocus),
                 )
                 OutlinedTextField(
                     value = cardCvv,
                     onValueChange = onCvvChange,
                     label = { Text("CVV") },
                     placeholder = { Text("123") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+                    keyboardOptions =
+                        KeyboardOptions(
+                            keyboardType = KeyboardType.NumberPassword,
+                            imeAction = ImeAction.Done,
+                        ),
+                    keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
                     visualTransformation = PasswordVisualTransformation(),
                     singleLine = true,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).focusRequester(cvvFocus),
                 )
             }
         }
@@ -331,6 +383,8 @@ private fun WalletPaymentSection(
     phone: String,
     onPhoneChange: (String) -> Unit,
 ) {
+    val focusManager = LocalFocusManager.current
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(2.dp),
@@ -346,7 +400,12 @@ private fun WalletPaymentSection(
                 onValueChange = onPhoneChange,
                 label = { Text("Phone number") },
                 placeholder = { Text("05XXXXXXXX") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                keyboardOptions =
+                    KeyboardOptions(
+                        keyboardType = KeyboardType.Phone,
+                        imeAction = ImeAction.Done,
+                    ),
+                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 prefix = { Text("+966 ") },
