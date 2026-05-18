@@ -1,6 +1,4 @@
 package com.sahmfood.pos.ui.transaction
-import com.sahmfood.pos.util.toMoneyString
-
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -34,18 +32,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.sahmfood.pos.ui.di.rememberTransactionViewModel
+import com.sahmfood.pos.domain.model.Transaction
 import com.sahmfood.pos.presentation.transaction.TransactionViewModel
 import com.sahmfood.pos.ui.components.LoadingOverlay
-import com.sahmfood.pos.ui.components.SectionDivider
-import com.sahmfood.pos.domain.model.Transaction
+import com.sahmfood.pos.ui.di.rememberTransactionViewModel
 import com.sahmfood.pos.util.toDisplayDateTime
+import com.sahmfood.pos.util.toMoneyString
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransactionScreen(
     modifier: Modifier = Modifier,
-    viewModel: TransactionViewModel = rememberTransactionViewModel()
+    viewModel: TransactionViewModel = rememberTransactionViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -54,21 +52,22 @@ fun TransactionScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Transaction History", fontWeight = FontWeight.Bold) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
+                colors =
+                    TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    ),
             )
-        }
+        },
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
             // Summary header
             Surface(
-                color    = MaterialTheme.colorScheme.secondaryContainer,
-                modifier = Modifier.fillMaxWidth()
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 Row(
                     modifier = Modifier.padding(16.dp).fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceAround
+                    horizontalArrangement = Arrangement.SpaceAround,
                 ) {
                     SummaryMetric("Transactions", "${state.transactionCount}")
                     SummaryMetric("Revenue", "SAR ${state.totalRevenue.toMoneyString()}")
@@ -81,12 +80,13 @@ fun TransactionScreen(
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                    verticalArrangement = Arrangement.Center,
                 ) {
                     Icon(
-                        Icons.Default.History, null,
+                        Icons.Default.History,
+                        null,
                         modifier = Modifier.size(72.dp),
-                        tint = MaterialTheme.colorScheme.outlineVariant
+                        tint = MaterialTheme.colorScheme.outlineVariant,
                     )
                     Spacer(Modifier.height(12.dp))
                     Text("No transactions yet", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -103,38 +103,47 @@ fun TransactionScreen(
 }
 
 @Composable
-private fun SummaryMetric(label: String, value: String) {
+private fun SummaryMetric(
+    label: String,
+    value: String,
+) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(value, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge)
-        Text(label, style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSecondaryContainer)
+        Text(
+            label,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
+        )
     }
 }
 
 @Composable
 private fun TransactionCard(tx: Transaction) {
     Card(
-        modifier  = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
-        shape     = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(2.dp)
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(2.dp),
     ) {
         Row(
             modifier = Modifier.padding(16.dp).fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(
-                imageVector        = Icons.Default.CheckCircle,
+                imageVector = Icons.Default.CheckCircle,
                 contentDescription = null,
-                tint               = MaterialTheme.colorScheme.primary,
-                modifier           = Modifier.size(32.dp)
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(32.dp),
             )
             Column(modifier = Modifier.weight(1f).padding(start = 12.dp)) {
-                Text(tx.receiptNumber, fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.titleSmall)
+                Text(
+                    tx.receiptNumber,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleSmall,
+                )
                 Text(
                     tx.paidAt.toDisplayDateTime(),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(tx.paymentMethod.name, style = MaterialTheme.typography.bodySmall)
             }
@@ -143,15 +152,18 @@ private fun TransactionCard(tx: Transaction) {
                     "SAR ${tx.amount.toMoneyString()}",
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
                 )
                 if (!tx.isSynced) {
                     Surface(
                         color = MaterialTheme.colorScheme.tertiaryContainer,
-                        shape = RoundedCornerShape(4.dp)
+                        shape = RoundedCornerShape(4.dp),
                     ) {
-                        Text("Pending sync", style = MaterialTheme.typography.labelSmall,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                        Text(
+                            "Pending sync",
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        )
                     }
                 }
             }

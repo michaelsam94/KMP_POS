@@ -15,7 +15,6 @@ import org.koin.core.context.startKoin
 import org.koin.dsl.module
 
 class PosApplication : Application() {
-
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override fun onCreate() {
@@ -27,7 +26,7 @@ class PosApplication : Application() {
                 sharedModule(),
                 module {
                     single { DatabaseDriverFactory(androidContext()) }
-                }
+                },
             )
         }
 

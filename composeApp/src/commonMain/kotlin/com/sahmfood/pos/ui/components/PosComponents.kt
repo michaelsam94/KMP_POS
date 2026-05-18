@@ -1,6 +1,4 @@
 package com.sahmfood.pos.ui.components
-import com.sahmfood.pos.util.toMoneyString
-
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,8 +21,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.sahmfood.pos.domain.model.CartItem
+import com.sahmfood.pos.util.toMoneyString
 
 @Composable
 fun LoadingOverlay() {
@@ -45,15 +42,15 @@ fun LoadingOverlay() {
 @Composable
 fun ErrorBanner(message: String) {
     Surface(
-        color  = MaterialTheme.colorScheme.errorContainer,
-        shape  = RoundedCornerShape(8.dp),
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
+        color = MaterialTheme.colorScheme.errorContainer,
+        shape = RoundedCornerShape(8.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
     ) {
         Text(
             text = message,
             color = MaterialTheme.colorScheme.onErrorContainer,
             modifier = Modifier.padding(12.dp),
-            style = MaterialTheme.typography.bodyMedium
+            style = MaterialTheme.typography.bodyMedium,
         )
     }
 }
@@ -64,35 +61,35 @@ fun CartItemRow(
     onIncrease: () -> Unit,
     onDecrease: () -> Unit,
     onRemove: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Card(
-        modifier  = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+        modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape     = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(12.dp),
     ) {
         Row(
             modifier = Modifier.padding(12.dp).fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text  = item.product.name,
+                    text = item.product.name,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
-                    maxLines   = 1,
-                    overflow   = TextOverflow.Ellipsis
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    text  = "SAR ${item.unitPrice.toMoneyString()} each",
+                    text = "SAR ${item.unitPrice.toMoneyString()} each",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 if (item.discount > 0) {
                     Text(
-                        text  = "-SAR ${item.discount.toMoneyString()} discount",
+                        text = "-SAR ${item.discount.toMoneyString()} discount",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error
+                        color = MaterialTheme.colorScheme.error,
                     )
                 }
             }
@@ -103,11 +100,11 @@ fun CartItemRow(
                     Icon(Icons.Default.Remove, contentDescription = "Decrease")
                 }
                 Text(
-                    text  = "${item.quantity}",
+                    text = "${item.quantity}",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.width(32.dp),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 )
                 IconButton(onClick = onIncrease, modifier = Modifier.size(36.dp)) {
                     Icon(Icons.Default.Add, contentDescription = "Increase")
@@ -118,17 +115,17 @@ fun CartItemRow(
 
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text  = "SAR ${item.lineTotal.toMoneyString()}",
+                    text = "SAR ${item.lineTotal.toMoneyString()}",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
                 )
                 IconButton(onClick = onRemove, modifier = Modifier.size(28.dp)) {
                     Icon(
                         Icons.Default.Delete,
                         contentDescription = "Remove",
-                        tint   = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(18.dp)
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(18.dp),
                     )
                 }
             }
@@ -137,21 +134,25 @@ fun CartItemRow(
 }
 
 @Composable
-fun TotalSummaryRow(label: String, value: String, isBold: Boolean = false) {
+fun TotalSummaryRow(
+    label: String,
+    value: String,
+    isBold: Boolean = false,
+) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 2.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(
-            text  = label,
-            style = if (isBold) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyMedium,
-            fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal
-        )
-        Text(
-            text  = value,
+            text = label,
             style = if (isBold) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyMedium,
             fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal,
-            color = if (isBold) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+        )
+        Text(
+            text = value,
+            style = if (isBold) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyMedium,
+            fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal,
+            color = if (isBold) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
         )
     }
 }
@@ -159,8 +160,8 @@ fun TotalSummaryRow(label: String, value: String, isBold: Boolean = false) {
 @Composable
 fun SectionDivider() {
     HorizontalDivider(
-        modifier  = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
         thickness = 1.dp,
-        color     = MaterialTheme.colorScheme.outlineVariant
+        color = MaterialTheme.colorScheme.outlineVariant,
     )
 }

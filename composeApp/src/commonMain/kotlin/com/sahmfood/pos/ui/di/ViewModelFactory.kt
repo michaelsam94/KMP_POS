@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import com.sahmfood.pos.data.hardware.MockPaymentTerminal
 import com.sahmfood.pos.data.hardware.MockReceiptPrinter
+import com.sahmfood.pos.domain.repository.OrderRepository
 import com.sahmfood.pos.domain.usecase.AddItemToCartUseCase
 import com.sahmfood.pos.domain.usecase.CalculateOrderTotalUseCase
 import com.sahmfood.pos.domain.usecase.CreateOrderUseCase
@@ -12,7 +13,6 @@ import com.sahmfood.pos.domain.usecase.ProcessPaymentUseCase
 import com.sahmfood.pos.domain.usecase.RemoveItemFromCartUseCase
 import com.sahmfood.pos.domain.usecase.ScanBarcodeUseCase
 import com.sahmfood.pos.domain.usecase.UpdateCartItemQuantityUseCase
-import com.sahmfood.pos.domain.repository.OrderRepository
 import com.sahmfood.pos.presentation.cart.CartViewModel
 import com.sahmfood.pos.presentation.order.OrderListViewModel
 import com.sahmfood.pos.presentation.payment.PaymentViewModel
@@ -36,14 +36,14 @@ fun rememberCartViewModel(): CartViewModel {
 
     return remember(createOrder, addItem, removeItem, updateQuantity, calculateTotal, scanBarcode, orderRepository) {
         CartViewModelStore.instance ?: CartViewModel(
-            createOrder     = createOrder,
-            addItem         = addItem,
-            removeItem      = removeItem,
-            updateQuantity  = updateQuantity,
-            calculateTotal  = calculateTotal,
-            scanBarcode     = scanBarcode,
+            createOrder = createOrder,
+            addItem = addItem,
+            removeItem = removeItem,
+            updateQuantity = updateQuantity,
+            calculateTotal = calculateTotal,
+            scanBarcode = scanBarcode,
             orderRepository = orderRepository,
-            scope           = AppViewModelScope.scope
+            scope = AppViewModelScope.scope,
         ).also { CartViewModelStore.instance = it }
     }
 }
@@ -59,11 +59,11 @@ fun rememberPaymentViewModel(): PaymentViewModel {
     return remember(orderRepository, processPayment, calculateTotal, receiptPrinter, paymentTerminal) {
         PaymentViewModel(
             orderRepository = orderRepository,
-            processPayment  = processPayment,
-            calculateTotal  = calculateTotal,
-            receiptPrinter  = receiptPrinter,
+            processPayment = processPayment,
+            calculateTotal = calculateTotal,
+            receiptPrinter = receiptPrinter,
             paymentTerminal = paymentTerminal,
-            scope           = AppViewModelScope.scope
+            scope = AppViewModelScope.scope,
         )
     }
 }
@@ -75,7 +75,7 @@ fun rememberOrderListViewModel(): OrderListViewModel {
     return remember(orderRepository) {
         OrderListViewModel(
             orderRepository = orderRepository,
-            scope           = AppViewModelScope.scope
+            scope = AppViewModelScope.scope,
         )
     }
 }
@@ -87,7 +87,7 @@ fun rememberTransactionViewModel(): TransactionViewModel {
     return remember(getHistory) {
         TransactionViewModel(
             getHistory = getHistory,
-            scope      = AppViewModelScope.scope
+            scope = AppViewModelScope.scope,
         )
     }
 }

@@ -1,5 +1,6 @@
 package com.sahmfood.pos.domain.usecase
 
+import com.benasher44.uuid.uuid4
 import com.sahmfood.pos.domain.model.Order
 import com.sahmfood.pos.domain.model.OrderStatus
 import com.sahmfood.pos.domain.model.PaymentMethod
@@ -7,7 +8,6 @@ import com.sahmfood.pos.domain.model.Transaction
 import com.sahmfood.pos.domain.model.TransactionStatus
 import com.sahmfood.pos.domain.repository.OrderRepository
 import com.sahmfood.pos.domain.repository.TransactionRepository
-import com.benasher44.uuid.uuid4
 import kotlinx.datetime.Clock
 
 /**
@@ -19,16 +19,16 @@ import kotlinx.datetime.Clock
 class ProcessPaymentUseCase(
     private val orderRepository: OrderRepository,
     private val transactionRepository: TransactionRepository,
-    private val calculateTotal: CalculateOrderTotalUseCase
+    private val calculateTotal: CalculateOrderTotalUseCase,
 ) {
     data class PaymentInput(
         val order: Order,
         val paymentMethod: PaymentMethod,
-        val amountTendered: Double,      // cash given / card charged
+        val amountTendered: Double, // cash given / card charged
         val taxRate: Double = Order.TAX_RATE,
         val extraDiscount: Double = 0.0,
         val cashierId: String = "",
-        val referenceNumber: String = "" // card / mobile ref
+        val referenceNumber: String = "", // card / mobile ref
     )
 
     suspend operator fun invoke(input: PaymentInput): Result<Transaction> {
@@ -46,19 +46,20 @@ class ProcessPaymentUseCase(
             val now = Clock.System.now()
             val receiptNumber = "RCP-${now.toEpochMilliseconds()}"
 
-            val transaction = Transaction(
-                id = uuid4().toString(),
-                orderId = input.order.id,
-                amount = breakdown.total,
-                paymentMethod = input.paymentMethod,
-                status = TransactionStatus.SUCCESS,
-                paidAt = now,
-                receiptNumber = receiptNumber,
-                cashierId = input.cashierId,
-                change = input.amountTendered - breakdown.total,
-                referenceNumber = input.referenceNumber,
-                isSynced = false
-            )
+            val transaction =
+                Transaction(
+                    id = uuid4().toString(),
+                    orderId = input.order.id,
+                    amount = breakdown.total,
+                    paymentMethod = input.paymentMethod,
+                    status = TransactionStatus.SUCCESS,
+                    paidAt = now,
+                    receiptNumber = receiptNumber,
+                    cashierId = input.cashierId,
+                    change = input.amountTendered - breakdown.total,
+                    referenceNumber = input.referenceNumber,
+                    isSynced = false,
+                )
 
             transactionRepository.save(transaction)
             orderRepository.updateStatus(input.order.id, OrderStatus.PAID)
@@ -69,7 +70,7 @@ class ProcessPaymentUseCase(
 
 /** Fetches the full transaction history, ordered by recency. */
 class GetTransactionHistoryUseCase(
-    private val transactionRepository: TransactionRepository
+    private val transactionRepository: TransactionRepository,
 ) {
     fun invoke() = transactionRepository.observeAll()
 }

@@ -7,7 +7,6 @@ import androidx.activity.enableEdgeToEdge
 import com.sahmfood.pos.ui.PosApp
 
 class MainActivity : ComponentActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()

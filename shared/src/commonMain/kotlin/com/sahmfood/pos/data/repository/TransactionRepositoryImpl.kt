@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Instant
 
 class TransactionRepositoryImpl(db: PosDatabase) : TransactionRepository {
-
     // SQLDelight generates "transactionQueries" from "Transaction.sq"
     private val queries = db.transactionQueries
 
@@ -23,25 +22,24 @@ class TransactionRepositoryImpl(db: PosDatabase) : TransactionRepository {
             .mapToList(Dispatchers.Default)
             .map { rows -> rows.map { it.toDomain() } }
 
-    override suspend fun getById(id: String): Transaction? =
-        queries.selectTransactionById(id).executeAsOneOrNull()?.toDomain()
+    override suspend fun getById(id: String): Transaction? = queries.selectTransactionById(id).executeAsOneOrNull()?.toDomain()
 
     override suspend fun getByOrderId(orderId: String): Transaction? =
         queries.selectTransactionByOrderId(orderId).executeAsOneOrNull()?.toDomain()
 
     override suspend fun save(transaction: Transaction) {
         queries.upsertTransaction(
-            id              = transaction.id,
-            orderId         = transaction.orderId,
-            amount          = transaction.amount,
-            paymentMethod   = transaction.paymentMethod.name,
-            status          = transaction.status.name,
-            paidAt          = transaction.paidAt.toEpochMilliseconds(),
-            receiptNumber   = transaction.receiptNumber,
-            cashierId       = transaction.cashierId,
-            change          = transaction.change,
+            id = transaction.id,
+            orderId = transaction.orderId,
+            amount = transaction.amount,
+            paymentMethod = transaction.paymentMethod.name,
+            status = transaction.status.name,
+            paidAt = transaction.paidAt.toEpochMilliseconds(),
+            receiptNumber = transaction.receiptNumber,
+            cashierId = transaction.cashierId,
+            change = transaction.change,
             referenceNumber = transaction.referenceNumber,
-            isSynced        = if (transaction.isSynced) 1L else 0L
+            isSynced = if (transaction.isSynced) 1L else 0L,
         )
     }
 
@@ -49,21 +47,21 @@ class TransactionRepositoryImpl(db: PosDatabase) : TransactionRepository {
         queries.markSynced(transactionId)
     }
 
-    override suspend fun getPendingSync(): List<Transaction> =
-        queries.selectPendingSync().executeAsList().map { it.toDomain() }
+    override suspend fun getPendingSync(): List<Transaction> = queries.selectPendingSync().executeAsList().map { it.toDomain() }
 
     // ── Mapper ────────────────────────────────────────────────────────────
-    private fun com.sahmfood.pos.TransactionEntity.toDomain() = Transaction(
-        id              = id,
-        orderId         = orderId,
-        amount          = amount,
-        paymentMethod   = PaymentMethod.valueOf(paymentMethod),
-        status          = TransactionStatus.valueOf(status),
-        paidAt          = Instant.fromEpochMilliseconds(paidAt),
-        receiptNumber   = receiptNumber,
-        cashierId       = cashierId,
-        change          = change,
-        referenceNumber = referenceNumber,
-        isSynced        = isSynced == 1L
-    )
+    private fun com.sahmfood.pos.TransactionEntity.toDomain() =
+        Transaction(
+            id = id,
+            orderId = orderId,
+            amount = amount,
+            paymentMethod = PaymentMethod.valueOf(paymentMethod),
+            status = TransactionStatus.valueOf(status),
+            paidAt = Instant.fromEpochMilliseconds(paidAt),
+            receiptNumber = receiptNumber,
+            cashierId = cashierId,
+            change = change,
+            referenceNumber = referenceNumber,
+            isSynced = isSynced == 1L,
+        )
 }

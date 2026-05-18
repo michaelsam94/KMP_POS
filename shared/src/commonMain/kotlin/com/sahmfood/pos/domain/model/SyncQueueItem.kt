@@ -7,12 +7,12 @@ data class SyncQueueItem(
     val id: String,
     val entityType: SyncEntityType,
     val entityId: String,
-    val payload: String,          // JSON serialised entity
+    val payload: String, // JSON serialised entity
     val status: SyncStatus,
     val retryCount: Int = 0,
     val createdAt: Instant,
     val lastAttemptAt: Instant? = null,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
 ) {
     val canRetry: Boolean get() = retryCount < MAX_RETRIES
 

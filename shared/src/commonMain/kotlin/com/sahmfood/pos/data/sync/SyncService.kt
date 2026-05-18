@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
 class SyncService(
     private val syncRepository: SyncRepository,
     private val remoteApi: RemoteApi,
-    private val scope: CoroutineScope
+    private val scope: CoroutineScope,
 ) {
     private val _syncState = MutableStateFlow<SyncState>(SyncState.Idle)
     val syncState: StateFlow<SyncState> = _syncState
@@ -81,14 +81,17 @@ class SyncService(
     }
 
     companion object {
-        private const val POLL_INTERVAL_MS  = 30_000L
+        private const val POLL_INTERVAL_MS = 30_000L
         private const val INITIAL_BACKOFF_MS = 2_000L
     }
 }
 
 sealed class SyncState {
     object Idle : SyncState()
+
     data class Syncing(val pendingCount: Int) : SyncState()
+
     data class Done(val successCount: Int, val failCount: Int) : SyncState()
+
     data class Error(val message: String) : SyncState()
 }

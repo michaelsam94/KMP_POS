@@ -5,7 +5,7 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
-private const val MIN_MS = 946_684_800_000L   // 2000-01-01 UTC
+private const val MIN_MS = 946_684_800_000L // 2000-01-01 UTC
 private const val MAX_MS = 4_102_444_800_000L // 2100-01-01 UTC
 
 /** Formats an [Instant] for UI/receipts without invalid NSDate/timezone crashes on iOS. */

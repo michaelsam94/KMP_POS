@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <!-- AGP 8.7 + JDK 17: detector crashes during analysis (CI/local) -->
+    <issue id="NullSafeMutableLiveData" severity="ignore" />
+</lint>

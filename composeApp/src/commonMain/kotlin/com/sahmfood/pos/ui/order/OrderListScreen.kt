@@ -1,6 +1,4 @@
 package com.sahmfood.pos.ui.order
-import com.sahmfood.pos.util.toMoneyString
-
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -33,17 +31,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.sahmfood.pos.ui.di.rememberOrderListViewModel
-import com.sahmfood.pos.presentation.order.OrderListViewModel
-import com.sahmfood.pos.ui.components.LoadingOverlay
 import com.sahmfood.pos.domain.model.Order
 import com.sahmfood.pos.domain.model.OrderStatus
+import com.sahmfood.pos.presentation.order.OrderListViewModel
+import com.sahmfood.pos.ui.components.LoadingOverlay
+import com.sahmfood.pos.ui.di.rememberOrderListViewModel
+import com.sahmfood.pos.util.toMoneyString
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OrderListScreen(
     modifier: Modifier = Modifier,
-    viewModel: OrderListViewModel = rememberOrderListViewModel()
+    viewModel: OrderListViewModel = rememberOrderListViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -52,30 +51,31 @@ fun OrderListScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Orders", fontWeight = FontWeight.Bold) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                )
+                colors =
+                    TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    ),
             )
-        }
+        },
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
             // Status filter chips
             LazyRow(
-                contentPadding    = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 item {
                     FilterChip(
                         selected = state.filterStatus == null,
-                        onClick  = { viewModel.filterByStatus(null) },
-                        label    = { Text("All") }
+                        onClick = { viewModel.filterByStatus(null) },
+                        label = { Text("All") },
                     )
                 }
                 items(OrderStatus.entries) { status ->
                     FilterChip(
                         selected = state.filterStatus == status,
-                        onClick  = { viewModel.filterByStatus(status) },
-                        label    = { Text(status.name) }
+                        onClick = { viewModel.filterByStatus(status) },
+                        label = { Text(status.name) },
                     )
                 }
             }
@@ -86,11 +86,14 @@ fun OrderListScreen(
                 Column(
                     modifier = Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                    verticalArrangement = Arrangement.Center,
                 ) {
-                    Icon(Icons.Default.Receipt, null,
+                    Icon(
+                        Icons.Default.Receipt,
+                        null,
                         modifier = Modifier.size(72.dp),
-                        tint = MaterialTheme.colorScheme.outlineVariant)
+                        tint = MaterialTheme.colorScheme.outlineVariant,
+                    )
                     Text("No orders found", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             } else {
@@ -107,26 +110,27 @@ fun OrderListScreen(
 @Composable
 private fun OrderCard(order: Order) {
     Card(
-        modifier  = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
-        shape     = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(2.dp)
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(2.dp),
     ) {
         Row(
             modifier = Modifier.padding(16.dp).fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     "#${order.id.take(8)}",
                     fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.titleSmall
+                    style = MaterialTheme.typography.titleSmall,
                 )
-                if (order.tableNumber.isNotBlank())
+                if (order.tableNumber.isNotBlank()) {
                     Text("Table ${order.tableNumber}", style = MaterialTheme.typography.bodySmall)
+                }
                 Text(
                     "${order.items.size} item(s)",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             Column(horizontalAlignment = Alignment.End) {
@@ -134,7 +138,7 @@ private fun OrderCard(order: Order) {
                 Text(
                     "SAR ${order.subtotal.toMoneyString()}",
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
         }
@@ -143,19 +147,20 @@ private fun OrderCard(order: Order) {
 
 @Composable
 private fun StatusBadge(status: OrderStatus) {
-    val (bg, fg) = when (status) {
-        OrderStatus.DRAFT     -> MaterialTheme.colorScheme.surfaceVariant  to MaterialTheme.colorScheme.onSurfaceVariant
-        OrderStatus.CONFIRMED -> MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer
-        OrderStatus.PAID      -> MaterialTheme.colorScheme.primaryContainer   to MaterialTheme.colorScheme.onPrimaryContainer
-        OrderStatus.CANCELLED -> MaterialTheme.colorScheme.errorContainer     to MaterialTheme.colorScheme.onErrorContainer
-        OrderStatus.SYNCED    -> MaterialTheme.colorScheme.tertiaryContainer  to MaterialTheme.colorScheme.onTertiaryContainer
-    }
+    val (bg, fg) =
+        when (status) {
+            OrderStatus.DRAFT -> MaterialTheme.colorScheme.surfaceVariant to MaterialTheme.colorScheme.onSurfaceVariant
+            OrderStatus.CONFIRMED -> MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer
+            OrderStatus.PAID -> MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.onPrimaryContainer
+            OrderStatus.CANCELLED -> MaterialTheme.colorScheme.errorContainer to MaterialTheme.colorScheme.onErrorContainer
+            OrderStatus.SYNCED -> MaterialTheme.colorScheme.tertiaryContainer to MaterialTheme.colorScheme.onTertiaryContainer
+        }
     Surface(color = bg, shape = RoundedCornerShape(6.dp)) {
         Text(
             status.name,
-            color    = fg,
-            style    = MaterialTheme.typography.labelSmall,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+            color = fg,
+            style = MaterialTheme.typography.labelSmall,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
         )
     }
 }

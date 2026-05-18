@@ -14,7 +14,6 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 
 class SyncRepositoryImpl(db: PosDatabase) : SyncRepository {
-
     // SQLDelight generates "syncQueueQueries" from "SyncQueue.sq"
     private val queries = db.syncQueueQueries
 
@@ -26,47 +25,51 @@ class SyncRepositoryImpl(db: PosDatabase) : SyncRepository {
 
     override suspend fun enqueue(item: SyncQueueItem) {
         queries.enqueue(
-            id         = item.id,
+            id = item.id,
             entityType = item.entityType.name,
-            entityId   = item.entityId,
-            payload    = item.payload,
-            createdAt  = item.createdAt.toEpochMilliseconds()
+            entityId = item.entityId,
+            payload = item.payload,
+            createdAt = item.createdAt.toEpochMilliseconds(),
         )
     }
 
-    override suspend fun updateStatus(itemId: String, status: SyncStatus, errorMessage: String?) {
+    override suspend fun updateStatus(
+        itemId: String,
+        status: SyncStatus,
+        errorMessage: String?,
+    ) {
         queries.updateStatus(
-            status        = status.name,
-            errorMessage  = errorMessage,
+            status = status.name,
+            errorMessage = errorMessage,
             lastAttemptAt = Clock.System.now().toEpochMilliseconds(),
-            id            = itemId
+            id = itemId,
         )
     }
 
     override suspend fun incrementRetry(itemId: String) {
         queries.incrementRetry(
             lastAttemptAt = Clock.System.now().toEpochMilliseconds(),
-            id            = itemId
+            id = itemId,
         )
     }
 
-    override suspend fun getPendingItems(): List<SyncQueueItem> =
-        queries.selectPending().executeAsList().map { it.toDomain() }
+    override suspend fun getPendingItems(): List<SyncQueueItem> = queries.selectPending().executeAsList().map { it.toDomain() }
 
     override suspend fun deleteSucceeded() {
         queries.deleteSucceeded()
     }
 
     // ── Mapper ────────────────────────────────────────────────────────────
-    private fun com.sahmfood.pos.SyncQueueEntity.toDomain() = SyncQueueItem(
-        id            = id,
-        entityType    = SyncEntityType.valueOf(entityType),
-        entityId      = entityId,
-        payload       = payload,
-        status        = SyncStatus.valueOf(status),
-        retryCount    = retryCount.toInt(),
-        createdAt     = Instant.fromEpochMilliseconds(createdAt),
-        lastAttemptAt = lastAttemptAt?.let { Instant.fromEpochMilliseconds(it) },
-        errorMessage  = errorMessage
-    )
+    private fun com.sahmfood.pos.SyncQueueEntity.toDomain() =
+        SyncQueueItem(
+            id = id,
+            entityType = SyncEntityType.valueOf(entityType),
+            entityId = entityId,
+            payload = payload,
+            status = SyncStatus.valueOf(status),
+            retryCount = retryCount.toInt(),
+            createdAt = Instant.fromEpochMilliseconds(createdAt),
+            lastAttemptAt = lastAttemptAt?.let { Instant.fromEpochMilliseconds(it) },
+            errorMessage = errorMessage,
+        )
 }

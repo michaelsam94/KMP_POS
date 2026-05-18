@@ -55,6 +55,22 @@ The Xcode build runs Gradle (`:composeApp:embedAndSignAppleFrameworkForXcode`) t
 ./gradlew :shared:allTests
 ```
 
+### CI / Release (GitHub Actions)
+
+| Workflow | Trigger | What it does |
+|---|---|---|
+| **CI** | Push / PR to `main` | Unit tests, Kotlin compile, debug APK build, Android Lint, iOS compile (macOS) |
+| **Release** | Push tag `v*` (e.g. `v1.0.0`) | Runs CI checks, builds release APK, publishes a [GitHub Release](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository) |
+
+```bash
+# Run the same checks locally as CI
+./gradlew ci
+
+# Create a release (after committing)
+git tag v1.0.0
+git push origin v1.0.0
+```
+
 ---
 
 ## Architecture

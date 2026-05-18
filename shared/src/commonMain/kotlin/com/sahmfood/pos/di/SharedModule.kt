@@ -33,44 +33,43 @@ import kotlinx.coroutines.SupervisorJob
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
-fun sharedModule(): Module = module {
+fun sharedModule(): Module =
+    module {
+        // ── Database ─────────────────────────────────────────────────────────
+        single { get<DatabaseDriverFactory>().create() }
+        single { PosDatabase(get()) }
 
-    // ── Database ─────────────────────────────────────────────────────────
-    single { get<DatabaseDriverFactory>().create() }
-    single { PosDatabase(get()) }
+        // ── Repositories ─────────────────────────────────────────────────────
+        single<ProductRepository> { ProductRepositoryImpl(get()) }
+        single<OrderRepository> { OrderRepositoryImpl(get()) }
+        single<TransactionRepository> { TransactionRepositoryImpl(get()) }
+        single<SyncRepository> { SyncRepositoryImpl(get()) }
 
-    // ── Repositories ─────────────────────────────────────────────────────
-    single<ProductRepository>     { ProductRepositoryImpl(get()) }
-    single<OrderRepository>       { OrderRepositoryImpl(get()) }
-    single<TransactionRepository> { TransactionRepositoryImpl(get()) }
-    single<SyncRepository>        { SyncRepositoryImpl(get()) }
+        // ── Hardware (mock) ───────────────────────────────────────────────────
+        single { MockReceiptPrinter() }
+        single { MockPaymentTerminal() }
+        single { MockBarcodeScanner() }
 
-    // ── Hardware (mock) ───────────────────────────────────────────────────
-    single { MockReceiptPrinter() }
-    single { MockPaymentTerminal() }
-    single { MockBarcodeScanner() }
+        // ── Sync ──────────────────────────────────────────────────────────────
+        single<RemoteApi> { MockRemoteApi() }
+        single {
+            SyncService(
+                syncRepository = get(),
+                remoteApi = get(),
+                scope = CoroutineScope(Dispatchers.Default + SupervisorJob()),
+            )
+        }
 
-    // ── Sync ──────────────────────────────────────────────────────────────
-    single<RemoteApi> { MockRemoteApi() }
-    single {
-        SyncService(
-            syncRepository = get(),
-            remoteApi      = get(),
-            scope          = CoroutineScope(Dispatchers.Default + SupervisorJob())
-        )
+        // ── Use cases ─────────────────────────────────────────────────────────
+        factory { CreateOrderUseCase(get()) }
+        factory { AddItemToCartUseCase(get()) }
+        factory { RemoveItemFromCartUseCase(get()) }
+        factory { UpdateCartItemQuantityUseCase(get()) }
+        factory { CalculateOrderTotalUseCase() }
+        factory { ProcessPaymentUseCase(get(), get(), get()) }
+        factory { GetTransactionHistoryUseCase(get()) }
+        factory { ObserveProductsUseCase(get()) }
+        factory { ScanBarcodeUseCase(get()) }
+        factory { SearchProductsUseCase(get()) }
+        factory { SeedDemoCatalogUseCase(get()) }
     }
-
-    // ── Use cases ─────────────────────────────────────────────────────────
-    factory { CreateOrderUseCase(get()) }
-    factory { AddItemToCartUseCase(get()) }
-    factory { RemoveItemFromCartUseCase(get()) }
-    factory { UpdateCartItemQuantityUseCase(get()) }
-    factory { CalculateOrderTotalUseCase() }
-    factory { ProcessPaymentUseCase(get(), get(), get()) }
-    factory { GetTransactionHistoryUseCase(get()) }
-    factory { ObserveProductsUseCase(get()) }
-    factory { ScanBarcodeUseCase(get()) }
-    factory { SearchProductsUseCase(get()) }
-    factory { SeedDemoCatalogUseCase(get()) }
-
-}

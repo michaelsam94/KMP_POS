@@ -23,7 +23,7 @@ fun initKoin() {
             sharedModule(),
             module {
                 single { DatabaseDriverFactory() }
-            }
+            },
         )
     }
 

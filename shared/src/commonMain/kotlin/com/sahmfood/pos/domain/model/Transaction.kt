@@ -15,9 +15,9 @@ data class Transaction(
     val paidAt: Instant,
     val receiptNumber: String,
     val cashierId: String = "",
-    val change: Double = 0.0,          // cash tendered minus amount
-    val referenceNumber: String = "",  // card / mobile ref
-    val isSynced: Boolean = false
+    val change: Double = 0.0, // cash tendered minus amount
+    val referenceNumber: String = "", // card / mobile ref
+    val isSynced: Boolean = false,
 ) {
     init {
         require(amount > 0.0) { "Transaction amount must be positive" }
@@ -26,9 +26,15 @@ data class Transaction(
 }
 
 enum class PaymentMethod {
-    CASH, CARD, MOBILE_WALLET, SPLIT
+    CASH,
+    CARD,
+    MOBILE_WALLET,
+    SPLIT,
 }
 
 enum class TransactionStatus {
-    PENDING, SUCCESS, FAILED, REFUNDED
+    PENDING,
+    SUCCESS,
+    FAILED,
+    REFUNDED,
 }

@@ -8,7 +8,7 @@ data class CartItem(
     val product: Product,
     val quantity: Int,
     val unitPrice: Double = product.price,
-    val discount: Double = 0.0   // flat amount per unit
+    val discount: Double = 0.0, // flat amount per unit
 ) {
     init {
         require(quantity >= 1) { "CartItem quantity must be at least 1" }

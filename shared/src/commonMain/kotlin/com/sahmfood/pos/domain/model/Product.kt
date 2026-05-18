@@ -13,7 +13,7 @@ data class Product(
     val category: String,
     val stockQuantity: Int,
     val imageUrl: String = "",
-    val isActive: Boolean = true
+    val isActive: Boolean = true,
 ) {
     init {
         require(price >= 0.0) { "Product price must be non-negative" }

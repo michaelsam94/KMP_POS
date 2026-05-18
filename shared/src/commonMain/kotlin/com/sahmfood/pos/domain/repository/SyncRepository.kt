@@ -10,7 +10,11 @@ interface SyncRepository {
 
     suspend fun enqueue(item: SyncQueueItem)
 
-    suspend fun updateStatus(itemId: String, status: SyncStatus, errorMessage: String? = null)
+    suspend fun updateStatus(
+        itemId: String,
+        status: SyncStatus,
+        errorMessage: String? = null,
+    )
 
     suspend fun incrementRetry(itemId: String)
 

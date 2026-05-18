@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.update
 
 class OrderListViewModel(
     private val orderRepository: OrderRepository,
-    scope: CoroutineScope
+    scope: CoroutineScope,
 ) {
     private val _state = MutableStateFlow(OrderListUiState())
     val state: StateFlow<OrderListUiState> = _state.asStateFlow()
@@ -40,7 +40,7 @@ data class OrderListUiState(
     val orders: List<Order> = emptyList(),
     val filterStatus: OrderStatus? = null,
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
 ) {
     val filteredOrders: List<Order>
         get() = if (filterStatus == null) orders else orders.filter { it.status == filterStatus }

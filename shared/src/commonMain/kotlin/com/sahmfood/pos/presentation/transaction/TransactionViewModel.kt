@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.update
 
 class TransactionViewModel(
     getHistory: GetTransactionHistoryUseCase,
-    scope: CoroutineScope
+    scope: CoroutineScope,
 ) {
     private val _state = MutableStateFlow(TransactionUiState())
     val state: StateFlow<TransactionUiState> = _state.asStateFlow()
@@ -34,7 +34,7 @@ class TransactionViewModel(
 data class TransactionUiState(
     val transactions: List<Transaction> = emptyList(),
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
 ) {
     val totalRevenue: Double get() = transactions.filter { it.status.name == "SUCCESS" }.sumOf { it.amount }
     val transactionCount: Int get() = transactions.size

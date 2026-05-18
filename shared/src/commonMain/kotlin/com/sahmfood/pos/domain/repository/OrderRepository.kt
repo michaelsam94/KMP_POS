@@ -15,7 +15,10 @@ interface OrderRepository {
     /** Persists a new order or replaces an existing one by id. */
     suspend fun save(order: Order)
 
-    suspend fun updateStatus(orderId: String, status: OrderStatus)
+    suspend fun updateStatus(
+        orderId: String,
+        status: OrderStatus,
+    )
 
     suspend fun delete(orderId: String)
 

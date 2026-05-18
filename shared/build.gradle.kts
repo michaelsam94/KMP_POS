@@ -20,7 +20,7 @@ kotlin {
     listOf(
         iosX64(),
         iosArm64(),
-        iosSimulatorArm64()
+        iosSimulatorArm64(),
     ).forEach { iosTarget ->
         iosTarget.binaries.framework {
             baseName = "shared"
@@ -73,6 +73,13 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    lint {
+        lintConfig = file("${rootProject.projectDir}/config/android-lint.xml")
+        disable += "NullSafeMutableLiveData"
+        abortOnError = true
+        warningsAsErrors = false
     }
 }
 

@@ -3,13 +3,13 @@ package com.sahmfood.pos.presentation.cart
 import com.sahmfood.pos.domain.model.Order
 import com.sahmfood.pos.domain.model.OrderStatus
 import com.sahmfood.pos.domain.model.Product
+import com.sahmfood.pos.domain.repository.OrderRepository
 import com.sahmfood.pos.domain.usecase.AddItemToCartUseCase
 import com.sahmfood.pos.domain.usecase.CalculateOrderTotalUseCase
 import com.sahmfood.pos.domain.usecase.CreateOrderUseCase
 import com.sahmfood.pos.domain.usecase.RemoveItemFromCartUseCase
-import com.sahmfood.pos.domain.usecase.UpdateCartItemQuantityUseCase
 import com.sahmfood.pos.domain.usecase.ScanBarcodeUseCase
-import com.sahmfood.pos.domain.repository.OrderRepository
+import com.sahmfood.pos.domain.usecase.UpdateCartItemQuantityUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,7 +25,7 @@ class CartViewModel(
     private val calculateTotal: CalculateOrderTotalUseCase,
     private val scanBarcode: ScanBarcodeUseCase,
     private val orderRepository: OrderRepository,
-    private val scope: CoroutineScope
+    private val scope: CoroutineScope,
 ) {
     private val _state = MutableStateFlow(CartUiState())
     val state: StateFlow<CartUiState> = _state.asStateFlow()
@@ -35,14 +35,17 @@ class CartViewModel(
     }
 
     /** Clears the cart UI immediately, then creates a fresh empty order in the database. */
-    fun startNewOrder(cashierId: String = "", tableNumber: String = "") {
+    fun startNewOrder(
+        cashierId: String = "",
+        tableNumber: String = "",
+    ) {
         _state.update {
             CartUiState(
                 isLoading = true,
                 order = null,
                 breakdown = null,
                 extraDiscount = 0.0,
-                error = null
+                error = null,
             )
         }
         scope.launch {
@@ -53,7 +56,7 @@ class CartViewModel(
                             order = order,
                             breakdown = null,
                             extraDiscount = 0.0,
-                            isLoading = false
+                            isLoading = false,
                         )
                     }
                 }
@@ -63,7 +66,10 @@ class CartViewModel(
         }
     }
 
-    fun addProductToCart(product: Product, quantity: Int = 1) {
+    fun addProductToCart(
+        product: Product,
+        quantity: Int = 1,
+    ) {
         val currentOrder = _state.value.order ?: return
         scope.launch {
             addItem(currentOrder, product, quantity)
@@ -91,7 +97,10 @@ class CartViewModel(
         }
     }
 
-    fun updateItemQuantity(productId: String, quantity: Int) {
+    fun updateItemQuantity(
+        productId: String,
+        quantity: Int,
+    ) {
         val currentOrder = _state.value.order ?: return
         scope.launch {
             updateQuantity(currentOrder, productId, quantity)
@@ -148,5 +157,5 @@ data class CartUiState(
     val breakdown: CalculateOrderTotalUseCase.TotalBreakdown? = null,
     val extraDiscount: Double = 0.0,
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
 )

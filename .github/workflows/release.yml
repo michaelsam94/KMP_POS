@@ -1,0 +1,67 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build release & publish GitHub Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Grant execute permission for Gradle wrapper
+        run: chmod +x gradlew
+
+      - name: Resolve version from tag
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#v}"
+          echo "APP_VERSION_NAME=$VERSION" >> "$GITHUB_ENV"
+          # versionCode from tag: v1.2.3 -> 10203 (major*10000 + minor*100 + patch)
+          IFS='.' read -r MAJOR MINOR PATCH <<< "${VERSION%%-*}"
+          MAJOR=${MAJOR:-0}; MINOR=${MINOR:-0}; PATCH=${PATCH:-0}
+          CODE=$((MAJOR * 10000 + MINOR * 100 + PATCH))
+          echo "APP_VERSION_CODE=$CODE" >> "$GITHUB_ENV"
+          echo "Release version: $VERSION (code $CODE)"
+
+      - name: Run verification (tests + compile)
+        run: ./gradlew ci --no-daemon
+
+      - name: Build Android release APK
+        run: |
+          ./gradlew :androidApp:assembleRelease \
+            -PappVersionName="$APP_VERSION_NAME" \
+            -PappVersionCode="$APP_VERSION_CODE" \
+            --no-daemon \
+            --stacktrace
+
+      - name: Collect release artifacts
+        run: |
+          mkdir -p release-artifacts
+          cp androidApp/build/outputs/apk/release/*.apk release-artifacts/ 2>/dev/null || true
+          ls -la release-artifacts/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Sahm Food POS ${{ env.APP_VERSION_NAME }}
+          generate_release_notes: true
+          files: release-artifacts/*
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}

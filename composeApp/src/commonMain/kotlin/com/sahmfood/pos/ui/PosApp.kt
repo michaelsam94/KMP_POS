@@ -32,8 +32,11 @@ fun PosApp() {
 
         if (paymentOrderId != null) {
             PaymentScreen(
-                orderId    = paymentOrderId!!,
-                onComplete = { paymentOrderId = null; selectedTab = MainTab.Cart }
+                orderId = paymentOrderId!!,
+                onComplete = {
+                    paymentOrderId = null
+                    selectedTab = MainTab.Cart
+                },
             )
             return@PosTheme
         }
@@ -45,28 +48,29 @@ fun PosApp() {
                         icon = { Icon(Icons.Default.ShoppingCart, contentDescription = "Cart") },
                         label = { Text("Cart") },
                         selected = selectedTab == MainTab.Cart,
-                        onClick = { selectedTab = MainTab.Cart }
+                        onClick = { selectedTab = MainTab.Cart },
                     )
                     NavigationBarItem(
                         icon = { Icon(Icons.Default.List, contentDescription = "Orders") },
                         label = { Text("Orders") },
                         selected = selectedTab == MainTab.Orders,
-                        onClick = { selectedTab = MainTab.Orders }
+                        onClick = { selectedTab = MainTab.Orders },
                     )
                     NavigationBarItem(
                         icon = { Icon(Icons.Default.History, contentDescription = "History") },
                         label = { Text("History") },
                         selected = selectedTab == MainTab.History,
-                        onClick = { selectedTab = MainTab.History }
+                        onClick = { selectedTab = MainTab.History },
                     )
                 }
-            }
+            },
         ) { innerPadding ->
             when (selectedTab) {
-                MainTab.Cart -> CartScreen(
-                    modifier = Modifier.padding(innerPadding),
-                    onProceedToPayment = { orderId -> paymentOrderId = orderId }
-                )
+                MainTab.Cart ->
+                    CartScreen(
+                        modifier = Modifier.padding(innerPadding),
+                        onProceedToPayment = { orderId -> paymentOrderId = orderId },
+                    )
                 MainTab.Orders -> OrderListScreen(modifier = Modifier.padding(innerPadding))
                 MainTab.History -> TransactionScreen(modifier = Modifier.padding(innerPadding))
             }

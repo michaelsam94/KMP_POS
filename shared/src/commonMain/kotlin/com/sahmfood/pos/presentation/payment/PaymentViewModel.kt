@@ -24,12 +24,15 @@ class PaymentViewModel(
     private val calculateTotal: CalculateOrderTotalUseCase,
     private val receiptPrinter: MockReceiptPrinter,
     private val paymentTerminal: MockPaymentTerminal,
-    private val scope: CoroutineScope
+    private val scope: CoroutineScope,
 ) {
     private val _state = MutableStateFlow(PaymentUiState())
     val state: StateFlow<PaymentUiState> = _state.asStateFlow()
 
-    fun loadOrderById(orderId: String, extraDiscount: Double = 0.0) {
+    fun loadOrderById(
+        orderId: String,
+        extraDiscount: Double = 0.0,
+    ) {
         if (orderId.isBlank()) {
             _state.update { it.copy(error = "Invalid order", isLoading = false) }
             return
@@ -53,19 +56,27 @@ class PaymentViewModel(
         }
     }
 
-    fun loadOrder(order: Order, taxRate: Double = Order.TAX_RATE, discount: Double = 0.0) {
+    fun loadOrder(
+        order: Order,
+        taxRate: Double = Order.TAX_RATE,
+        discount: Double = 0.0,
+    ) {
         applyOrder(order, discount, taxRate)
     }
 
-    private fun applyOrder(order: Order, discount: Double, taxRate: Double = Order.TAX_RATE) {
+    private fun applyOrder(
+        order: Order,
+        discount: Double,
+        taxRate: Double = Order.TAX_RATE,
+    ) {
         val breakdown = calculateTotal(order, taxRate, discount)
         _state.update {
             it.copy(
-                order          = order,
-                breakdown      = breakdown,
+                order = order,
+                breakdown = breakdown,
                 amountTendered = breakdown.total,
-                isLoading      = false,
-                error          = null
+                isLoading = false,
+                error = null,
             )
         }
     }
@@ -74,37 +85,34 @@ class PaymentViewModel(
         _state.update { current ->
             val total = current.breakdown?.total ?: 0.0
             current.copy(
-                paymentMethod  = method,
+                paymentMethod = method,
                 amountTendered = total,
-                cardNumber     = "",
-                cardExpiry     = "",
-                cardCvv        = "",
-                walletPhone    = "",
-                error          = null
+                cardNumber = "",
+                cardExpiry = "",
+                cardCvv = "",
+                walletPhone = "",
+                error = null,
             )
         }
     }
 
-    fun setCardNumber(value: String) =
-        _state.update { it.copy(cardNumber = value.filter { c -> c.isDigit() }.take(16)) }
+    fun setCardNumber(value: String) = _state.update { it.copy(cardNumber = value.filter { c -> c.isDigit() }.take(16)) }
 
-    fun setCardExpiry(value: String) =
-        _state.update { it.copy(cardExpiry = value.filter { c -> c.isDigit() }.take(4)) }
+    fun setCardExpiry(value: String) = _state.update { it.copy(cardExpiry = value.filter { c -> c.isDigit() }.take(4)) }
 
-    fun setCardCvv(value: String) =
-        _state.update { it.copy(cardCvv = value.filter { c -> c.isDigit() }.take(4)) }
+    fun setCardCvv(value: String) = _state.update { it.copy(cardCvv = value.filter { c -> c.isDigit() }.take(4)) }
 
-    fun setWalletPhone(value: String) =
-        _state.update { it.copy(walletPhone = value.filter { c -> c.isDigit() || c == '+' }.take(15)) }
+    fun setWalletPhone(value: String) = _state.update { it.copy(walletPhone = value.filter { c -> c.isDigit() || c == '+' }.take(15)) }
 
     fun canConfirmPayment(): Boolean {
         val s = _state.value
         if (s.isLoading || s.isProcessing || s.order == null || s.breakdown == null) return false
         return when (s.paymentMethod) {
             PaymentMethod.CASH -> true
-            PaymentMethod.CARD -> s.cardNumber.length == 16 &&
-                s.cardExpiry.length == 4 &&
-                s.cardCvv.length >= 3
+            PaymentMethod.CARD ->
+                s.cardNumber.length == 16 &&
+                    s.cardExpiry.length == 4 &&
+                    s.cardCvv.length >= 3
             PaymentMethod.MOBILE_WALLET -> s.walletPhone.filter { it.isDigit() }.length >= 9
             PaymentMethod.SPLIT -> false
         }
@@ -127,29 +135,33 @@ class PaymentViewModel(
             _state.update { it.copy(isProcessing = true, error = null) }
 
             val amountToCharge = breakdown.total
-            val reference = when (s.paymentMethod) {
-                PaymentMethod.CASH -> ""
-                PaymentMethod.CARD -> "CARD-${s.cardNumber.takeLast(4)}"
-                PaymentMethod.MOBILE_WALLET -> s.walletPhone.filter { it.isDigit() }
-                PaymentMethod.SPLIT -> ""
-            }
-
-            if (s.paymentMethod != PaymentMethod.CASH) {
-                val terminalResult = when (s.paymentMethod) {
-                    PaymentMethod.CARD -> paymentTerminal.chargeCard(amountToCharge, order.id)
-                    PaymentMethod.MOBILE_WALLET -> paymentTerminal.chargeMobileWallet(
-                        amountToCharge,
-                        s.walletPhone
-                    )
-                    else -> TerminalResult.Approved("CASH", "")
+            val reference =
+                when (s.paymentMethod) {
+                    PaymentMethod.CASH -> ""
+                    PaymentMethod.CARD -> "CARD-${s.cardNumber.takeLast(4)}"
+                    PaymentMethod.MOBILE_WALLET -> s.walletPhone.filter { it.isDigit() }
+                    PaymentMethod.SPLIT -> ""
                 }
 
-                if (terminalResult is TerminalResult.Declined || terminalResult is TerminalResult.Error) {
-                    val reason = when (terminalResult) {
-                        is TerminalResult.Declined -> terminalResult.reason
-                        is TerminalResult.Error    -> terminalResult.message
-                        else -> "Payment declined"
+            if (s.paymentMethod != PaymentMethod.CASH) {
+                val terminalResult =
+                    when (s.paymentMethod) {
+                        PaymentMethod.CARD -> paymentTerminal.chargeCard(amountToCharge, order.id)
+                        PaymentMethod.MOBILE_WALLET ->
+                            paymentTerminal.chargeMobileWallet(
+                                amountToCharge,
+                                s.walletPhone,
+                            )
+                        else -> TerminalResult.Approved("CASH", "")
                     }
+
+                if (terminalResult is TerminalResult.Declined || terminalResult is TerminalResult.Error) {
+                    val reason =
+                        when (terminalResult) {
+                            is TerminalResult.Declined -> terminalResult.reason
+                            is TerminalResult.Error -> terminalResult.message
+                            else -> "Payment declined"
+                        }
                     _state.update { it.copy(isProcessing = false, error = reason) }
                     return@launch
                 }
@@ -158,15 +170,16 @@ class PaymentViewModel(
                 _state.update { it.copy(referenceNumber = terminalRef) }
             }
 
-            val input = ProcessPaymentUseCase.PaymentInput(
-                order           = order,
-                paymentMethod   = s.paymentMethod,
-                amountTendered  = amountToCharge,
-                taxRate         = breakdown.taxRate,
-                extraDiscount   = breakdown.discountAmount,
-                cashierId       = cashierId,
-                referenceNumber = _state.value.referenceNumber.ifBlank { reference }
-            )
+            val input =
+                ProcessPaymentUseCase.PaymentInput(
+                    order = order,
+                    paymentMethod = s.paymentMethod,
+                    amountTendered = amountToCharge,
+                    taxRate = breakdown.taxRate,
+                    extraDiscount = breakdown.discountAmount,
+                    cashierId = cashierId,
+                    referenceNumber = _state.value.referenceNumber.ifBlank { reference },
+                )
 
             processPayment(input)
                 .onSuccess { transaction ->
@@ -174,10 +187,10 @@ class PaymentViewModel(
                     val receiptText = (printResult as? PrintResult.Success)?.receiptText
                     _state.update {
                         it.copy(
-                            isProcessing    = false,
-                            transaction     = transaction,
-                            receiptText     = receiptText,
-                            paymentComplete = true
+                            isProcessing = false,
+                            transaction = transaction,
+                            receiptText = receiptText,
+                            paymentComplete = true,
                         )
                     }
                 }
@@ -188,19 +201,22 @@ class PaymentViewModel(
     }
 
     fun clearError() = _state.update { it.copy(error = null) }
+
     fun resetPayment() = _state.update { PaymentUiState() }
 
-    private fun validationMessage(s: PaymentUiState): String = when (s.paymentMethod) {
-        PaymentMethod.CASH -> "Unable to process cash payment"
-        PaymentMethod.CARD -> when {
-            s.cardNumber.length != 16 -> "Enter a valid 16-digit card number"
-            s.cardExpiry.length != 4  -> "Enter expiry as MMYY"
-            s.cardCvv.length < 3      -> "Enter a valid CVV"
-            else -> "Complete card details"
+    private fun validationMessage(s: PaymentUiState): String =
+        when (s.paymentMethod) {
+            PaymentMethod.CASH -> "Unable to process cash payment"
+            PaymentMethod.CARD ->
+                when {
+                    s.cardNumber.length != 16 -> "Enter a valid 16-digit card number"
+                    s.cardExpiry.length != 4 -> "Enter expiry as MMYY"
+                    s.cardCvv.length < 3 -> "Enter a valid CVV"
+                    else -> "Complete card details"
+                }
+            PaymentMethod.MOBILE_WALLET -> "Enter a valid phone number (at least 9 digits)"
+            PaymentMethod.SPLIT -> "Split payment is not supported"
         }
-        PaymentMethod.MOBILE_WALLET -> "Enter a valid phone number (at least 9 digits)"
-        PaymentMethod.SPLIT -> "Split payment is not supported"
-    }
 }
 
 data class PaymentUiState(
@@ -218,5 +234,5 @@ data class PaymentUiState(
     val paymentComplete: Boolean = false,
     val transaction: Transaction? = null,
     val receiptText: String? = null,
-    val error: String? = null
+    val error: String? = null,
 )

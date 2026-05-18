@@ -14,8 +14,8 @@ android {
         applicationId = "com.sahmfood.pos.android"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = (project.findProperty("appVersionCode") as String?)?.toIntOrNull() ?: 1
+        versionName = project.findProperty("appVersionName") as String? ?: "1.0"
     }
 
     buildTypes {
@@ -23,7 +23,7 @@ android {
             isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
     }
@@ -40,6 +40,13 @@ android {
     buildFeatures {
         compose = true
     }
+
+    lint {
+        lintConfig = file("${rootProject.projectDir}/config/android-lint.xml")
+        disable += "NullSafeMutableLiveData"
+        abortOnError = true
+        warningsAsErrors = false
+    }
 }
 
 dependencies {
@@ -49,5 +56,5 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.koin.android)
 
-    debugImplementation("androidx.compose.ui:ui-tooling")
+    debugImplementation(libs.androidx.compose.ui.tooling)
 }
