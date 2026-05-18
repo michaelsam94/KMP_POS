@@ -1,6 +1,6 @@
-package com.sahmfood.pos.android.ui.payment
+package com.sahmfood.pos.ui.payment
+import com.sahmfood.pos.util.toMoneyString
 
-import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -37,33 +37,34 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.sahmfood.pos.android.di.CartAndroidViewModel
-import com.sahmfood.pos.android.di.PaymentAndroidViewModel
-import com.sahmfood.pos.android.ui.components.ErrorBanner
-import com.sahmfood.pos.android.ui.components.LoadingOverlay
-import com.sahmfood.pos.android.ui.components.SectionDivider
-import com.sahmfood.pos.android.ui.components.TotalSummaryRow
+import androidx.compose.runtime.collectAsState
+import com.sahmfood.pos.ui.di.rememberCartViewModel
+import com.sahmfood.pos.ui.di.rememberPaymentViewModel
+import com.sahmfood.pos.presentation.payment.PaymentViewModel
+import com.sahmfood.pos.ui.components.ErrorBanner
+import com.sahmfood.pos.ui.components.LoadingOverlay
+import com.sahmfood.pos.ui.components.SectionDivider
+import com.sahmfood.pos.ui.components.TotalSummaryRow
 import com.sahmfood.pos.domain.model.PaymentMethod
-import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PaymentScreen(
     orderId: String,
     onComplete: () -> Unit,
-    viewModel: PaymentAndroidViewModel = koinViewModel()
+    modifier: Modifier = Modifier,
+    viewModel: PaymentViewModel = rememberPaymentViewModel(),
+    cartViewModel: com.sahmfood.pos.presentation.cart.CartViewModel = rememberCartViewModel()
 ) {
-    val activity = LocalContext.current as ComponentActivity
-    val cartViewModel: CartAndroidViewModel = koinViewModel(viewModelStoreOwner = activity)
-
-    val payState by viewModel.state.collectAsStateWithLifecycle()
+    val payState by viewModel.state.collectAsState()
 
     LaunchedEffect(orderId) {
         viewModel.loadOrderById(orderId)
@@ -90,6 +91,7 @@ fun PaymentScreen(
     }
 
     Scaffold(
+        modifier = modifier,
         topBar = {
             TopAppBar(title = { Text("Payment", fontWeight = FontWeight.Bold) })
         }
@@ -122,21 +124,21 @@ fun PaymentScreen(
                             style = MaterialTheme.typography.titleMedium
                         )
                         Spacer(Modifier.height(8.dp))
-                        TotalSummaryRow("Subtotal", "SAR ${String.format("%.2f", b.subtotal)}")
+                        TotalSummaryRow("Subtotal", "SAR ${b.subtotal.toMoneyString()}")
                         TotalSummaryRow(
                             "Tax (${(b.taxRate * 100).toInt()}%)",
-                            "SAR ${String.format("%.2f", b.taxAmount)}"
+                            "SAR ${b.taxAmount.toMoneyString()}"
                         )
                         if (b.discountAmount > 0) {
                             TotalSummaryRow(
                                 "Discount",
-                                "-SAR ${String.format("%.2f", b.discountAmount)}"
+                                "-SAR ${b.discountAmount.toMoneyString()}"
                             )
                         }
                         SectionDivider()
                         TotalSummaryRow(
                             "TOTAL DUE",
-                            "SAR ${String.format("%.2f", b.total)}",
+                            "SAR ${b.total.toMoneyString()}",
                             isBold = true
                         )
                     }
@@ -250,7 +252,7 @@ private fun CashPaymentSection(total: Double) {
                 color = MaterialTheme.colorScheme.onSecondaryContainer
             )
             Text(
-                "SAR ${String.format("%.2f", total)}",
+                "SAR ${total.toMoneyString()}",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
@@ -348,14 +350,35 @@ private fun WalletPaymentSection(
     }
 }
 
+/** Groups digits as "1234 5678 …" with correct cursor offset mapping. */
 private class CardNumberVisualTransformation : VisualTransformation {
-    override fun filter(text: androidx.compose.ui.text.AnnotatedString): androidx.compose.ui.text.input.TransformedText {
+    override fun filter(text: AnnotatedString): TransformedText {
         val digits = text.text
-        val grouped = digits.chunked(4).joinToString(" ")
-        return androidx.compose.ui.text.input.TransformedText(
-            androidx.compose.ui.text.AnnotatedString(grouped),
-            androidx.compose.ui.text.input.OffsetMapping.Identity
-        )
+        val formatted = buildString {
+            digits.forEachIndexed { index, char ->
+                if (index > 0 && index % 4 == 0) append(' ')
+                append(char)
+            }
+        }
+
+        val offsetMapping = object : OffsetMapping {
+            override fun originalToTransformed(offset: Int): Int {
+                if (offset <= 0) return 0
+                val spacesBefore = (offset - 1) / 4
+                return (offset + spacesBefore).coerceAtMost(formatted.length)
+            }
+
+            override fun transformedToOriginal(offset: Int): Int {
+                if (offset <= 0) return 0
+                var spaces = 0
+                for (i in 0 until offset.coerceAtMost(formatted.length)) {
+                    if (formatted[i] == ' ') spaces++
+                }
+                return (offset - spaces).coerceIn(0, digits.length)
+            }
+        }
+
+        return TransformedText(AnnotatedString(formatted), offsetMapping)
     }
 }
 
@@ -393,10 +416,10 @@ private fun PaymentSuccessScreen(
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.primary
         )
-        Text("SAR ${String.format("%.2f", total)} paid", style = MaterialTheme.typography.titleLarge)
+        Text("SAR ${total.toMoneyString()} paid", style = MaterialTheme.typography.titleLarge)
         if (change > 0) {
             Text(
-                "Change: SAR ${String.format("%.2f", change)}",
+                "Change: SAR ${change.toMoneyString()}",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.secondary,
                 fontWeight = FontWeight.Bold

@@ -2,6 +2,7 @@ package com.sahmfood.pos.data.hardware
 
 import com.sahmfood.pos.domain.model.Order
 import com.sahmfood.pos.domain.model.Transaction
+import com.sahmfood.pos.util.toMoneyString
 import kotlinx.coroutines.delay
 
 /** Contract for receipt printers (real or mock). */
@@ -34,17 +35,17 @@ class MockReceiptPrinter : ReceiptPrinter {
             if (order.cashierId.isNotBlank())   add("Cashier  : ${order.cashierId}")
             add("----------------------------------------")
             order.items.forEach { item ->
-                val lineTotal = String.format("%.2f", item.lineTotal)
+                val lineTotal = item.lineTotal.toMoneyString()
                 add("${item.product.name.padEnd(24)} x${item.quantity}")
                 add("  @ ${item.unitPrice}${if (item.discount > 0) " (-${item.discount})" else ""} = $lineTotal")
             }
             add("----------------------------------------")
-            add("Subtotal : ${String.format("%.2f", order.subtotal)}")
-            add("Tax(15%) : ${String.format("%.2f", order.tax(Order.TAX_RATE))}")
-            add("TOTAL    : ${String.format("%.2f", transaction.amount)}")
+            add("Subtotal : ${order.subtotal.toMoneyString()}")
+            add("Tax(15%) : ${order.tax(Order.TAX_RATE).toMoneyString()}")
+            add("TOTAL    : ${transaction.amount.toMoneyString()}")
             add("Paid     : ${transaction.paymentMethod.name}")
             if (transaction.change > 0)
-                add("Change   : ${String.format("%.2f", transaction.change)}")
+                add("Change   : ${transaction.change.toMoneyString()}")
             if (transaction.referenceNumber.isNotBlank())
                 add("Ref      : ${transaction.referenceNumber}")
             add("========================================")

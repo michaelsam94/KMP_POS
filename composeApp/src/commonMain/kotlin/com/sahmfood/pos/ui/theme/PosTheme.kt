@@ -1,4 +1,4 @@
-package com.sahmfood.pos.android.ui.theme
+package com.sahmfood.pos.ui.theme
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme

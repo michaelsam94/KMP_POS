@@ -1,7 +1,6 @@
 package com.sahmfood.pos.android
 
 import android.app.Application
-import com.sahmfood.pos.android.di.androidViewModelModule
 import com.sahmfood.pos.data.local.db.DatabaseDriverFactory
 import com.sahmfood.pos.data.sync.SyncService
 import com.sahmfood.pos.di.sharedModule
@@ -26,7 +25,6 @@ class PosApplication : Application() {
             androidContext(this@PosApplication)
             modules(
                 sharedModule(),
-                androidViewModelModule,
                 module {
                     single { DatabaseDriverFactory(androidContext()) }
                 }

@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.sahmfood.pos.android.ui.PosApp
+import com.sahmfood.pos.ui.PosApp
 
 class MainActivity : ComponentActivity() {
 

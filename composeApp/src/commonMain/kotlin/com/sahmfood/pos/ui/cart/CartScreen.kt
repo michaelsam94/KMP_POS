@@ -1,4 +1,5 @@
-package com.sahmfood.pos.android.ui.cart
+package com.sahmfood.pos.ui.cart
+import com.sahmfood.pos.util.toMoneyString
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -57,29 +58,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.activity.ComponentActivity
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.sahmfood.pos.android.di.CartAndroidViewModel
-import com.sahmfood.pos.android.ui.components.CartItemRow
-import com.sahmfood.pos.android.ui.components.ErrorBanner
-import com.sahmfood.pos.android.ui.components.LoadingOverlay
-import com.sahmfood.pos.android.ui.components.SectionDivider
-import com.sahmfood.pos.android.ui.components.TotalSummaryRow
+import com.sahmfood.pos.ui.di.rememberCartViewModel
+import com.sahmfood.pos.ui.components.CartItemRow
+import com.sahmfood.pos.ui.components.ErrorBanner
+import com.sahmfood.pos.ui.components.LoadingOverlay
+import com.sahmfood.pos.ui.components.SectionDivider
+import com.sahmfood.pos.ui.components.TotalSummaryRow
 import com.sahmfood.pos.data.DemoCatalog
 import com.sahmfood.pos.domain.model.Product
 import kotlinx.coroutines.launch
-import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CartScreen(
     onProceedToPayment: (orderId: String) -> Unit,
-    viewModel: CartAndroidViewModel = koinViewModel(
-        viewModelStoreOwner = LocalContext.current as ComponentActivity
-    )
+    modifier: Modifier = Modifier,
+    viewModel: com.sahmfood.pos.presentation.cart.CartViewModel = rememberCartViewModel()
 ) {
-    val state by viewModel.state.collectAsStateWithLifecycle()
+    val state by viewModel.state.collectAsState()
     val snackbar = remember { SnackbarHostState() }
     val scope    = rememberCoroutineScope()
     var showProductPicker by remember { mutableStateOf(false) }
@@ -94,6 +90,7 @@ fun CartScreen(
     }
 
     Scaffold(
+        modifier = modifier,
         topBar = {
             TopAppBar(
                 title = {
@@ -160,21 +157,21 @@ fun CartScreen(
                 // Order summary panel
                 SectionDivider()
                 state.breakdown?.let { b ->
-                    TotalSummaryRow("Subtotal", "SAR ${String.format("%.2f", b.subtotal)}")
+                    TotalSummaryRow("Subtotal", "SAR ${b.subtotal.toMoneyString()}")
                     TotalSummaryRow(
                         "Tax (${(b.taxRate * 100).toInt()}%)",
-                        "SAR ${String.format("%.2f", b.taxAmount)}"
+                        "SAR ${b.taxAmount.toMoneyString()}"
                     )
                     if (b.discountAmount > 0) {
                         TotalSummaryRow(
                             "Discount",
-                            "-SAR ${String.format("%.2f", b.discountAmount)}",
+                            "-SAR ${b.discountAmount.toMoneyString()}",
                         )
                     }
                     SectionDivider()
                     TotalSummaryRow(
                         "TOTAL",
-                        "SAR ${String.format("%.2f", b.total)}",
+                        "SAR ${b.total.toMoneyString()}",
                         isBold = true
                     )
                 }
@@ -309,7 +306,7 @@ private fun ProductPickerDialog(
                                     )
                                 }
                                 Text(
-                                    "SAR ${String.format("%.2f", product.price)}",
+                                    "SAR ${product.price.toMoneyString()}",
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary
                                 )

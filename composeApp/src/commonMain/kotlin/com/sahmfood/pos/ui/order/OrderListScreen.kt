@@ -1,4 +1,5 @@
-package com.sahmfood.pos.android.ui.order
+package com.sahmfood.pos.ui.order
+import com.sahmfood.pos.util.toMoneyString
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -26,26 +27,28 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.sahmfood.pos.android.di.OrderListAndroidViewModel
-import com.sahmfood.pos.android.ui.components.LoadingOverlay
+import com.sahmfood.pos.ui.di.rememberOrderListViewModel
+import com.sahmfood.pos.presentation.order.OrderListViewModel
+import com.sahmfood.pos.ui.components.LoadingOverlay
 import com.sahmfood.pos.domain.model.Order
 import com.sahmfood.pos.domain.model.OrderStatus
-import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OrderListScreen(
-    viewModel: OrderListAndroidViewModel = koinViewModel()
+    modifier: Modifier = Modifier,
+    viewModel: OrderListViewModel = rememberOrderListViewModel()
 ) {
-    val state by viewModel.state.collectAsStateWithLifecycle()
+    val state by viewModel.state.collectAsState()
 
     Scaffold(
+        modifier = modifier,
         topBar = {
             TopAppBar(
                 title = { Text("Orders", fontWeight = FontWeight.Bold) },
@@ -129,7 +132,7 @@ private fun OrderCard(order: Order) {
             Column(horizontalAlignment = Alignment.End) {
                 StatusBadge(order.status)
                 Text(
-                    "SAR ${String.format("%.2f", order.subtotal)}",
+                    "SAR ${order.subtotal.toMoneyString()}",
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )

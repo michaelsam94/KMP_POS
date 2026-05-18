@@ -41,6 +41,14 @@ cd kmm_pos
 ./gradlew :androidApp:installDebug
 ```
 
+### Run iOS
+
+1. Open `iosApp/iosApp.xcodeproj` in Xcode.
+2. Set your **Development Team** in `iosApp/Configuration/Config.xcconfig` (`TEAM_ID=...`) or in Signing & Capabilities.
+3. Select an iOS Simulator (or device) and run the **iosApp** scheme.
+
+The Xcode build runs Gradle (`:composeApp:embedAndSignAppleFrameworkForXcode`) to compile and embed the shared **ComposeApp** framework. The Swift shell hosts the same Compose UI as Android (`PosApp`).
+
 ### Run Tests
 
 ```bash
@@ -68,8 +76,9 @@ See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for a full deep-dive covering
 ```
 kmm_pos/
 ├── shared/          ← KMP shared module (domain + data + presentation)
-├── androidApp/      ← Jetpack Compose Android app
-├── iosApp/          ← SwiftUI iOS app (framework consumer)
+├── composeApp/      ← Compose Multiplatform UI (Android + iOS)
+├── androidApp/      ← Android application shell
+├── iosApp/          ← SwiftUI iOS shell (ComposeApp framework)
 └── docs/            ← Architecture notes
 ```
 
@@ -80,7 +89,7 @@ kmm_pos/
 | Library | Purpose |
 |---|---|
 | Kotlin Multiplatform | Shared business logic across Android & iOS |
-| Jetpack Compose | Android declarative UI |
+| Compose Multiplatform | Shared UI on Android & iOS |
 | SQLDelight 2.x | Type-safe SQL, offline storage |
 | Koin 3.x | Dependency injection |
 | Kotlin Coroutines + StateFlow | Async & reactive state |

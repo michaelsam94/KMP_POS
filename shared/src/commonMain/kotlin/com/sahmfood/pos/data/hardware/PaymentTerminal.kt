@@ -1,6 +1,7 @@
 package com.sahmfood.pos.data.hardware
 
 import kotlinx.coroutines.delay
+import kotlinx.datetime.Clock
 
 /** Contract for card/mobile payment terminal hardware. */
 interface PaymentTerminal {
@@ -24,7 +25,7 @@ class MockPaymentTerminal : PaymentTerminal {
         delay(1_000) // simulate POS-to-acquirer round-trip
         return if (amount > 0) {
             TerminalResult.Approved(
-                referenceNumber = "REF${System.currentTimeMillis()}",
+                referenceNumber = "REF${Clock.System.now().toEpochMilliseconds()}",
                 authCode        = "AUTH${(100_000..999_999).random()}"
             )
         } else {
@@ -35,7 +36,7 @@ class MockPaymentTerminal : PaymentTerminal {
     override suspend fun chargeMobileWallet(amount: Double, walletType: String): TerminalResult {
         delay(800)
         return TerminalResult.Approved(
-            referenceNumber = "$walletType-${System.currentTimeMillis()}",
+            referenceNumber = "$walletType-${Clock.System.now().toEpochMilliseconds()}",
             authCode        = "WALLET-OK"
         )
     }

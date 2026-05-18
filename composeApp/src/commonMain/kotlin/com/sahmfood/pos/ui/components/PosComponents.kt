@@ -1,4 +1,5 @@
-package com.sahmfood.pos.android.ui.components
+package com.sahmfood.pos.ui.components
+import com.sahmfood.pos.util.toMoneyString
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -83,13 +84,13 @@ fun CartItemRow(
                     overflow   = TextOverflow.Ellipsis
                 )
                 Text(
-                    text  = "SAR ${String.format("%.2f", item.unitPrice)} each",
+                    text  = "SAR ${item.unitPrice.toMoneyString()} each",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 if (item.discount > 0) {
                     Text(
-                        text  = "-SAR ${String.format("%.2f", item.discount)} discount",
+                        text  = "-SAR ${item.discount.toMoneyString()} discount",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.error
                     )
@@ -117,7 +118,7 @@ fun CartItemRow(
 
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text  = "SAR ${String.format("%.2f", item.lineTotal)}",
+                    text  = "SAR ${item.lineTotal.toMoneyString()}",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary

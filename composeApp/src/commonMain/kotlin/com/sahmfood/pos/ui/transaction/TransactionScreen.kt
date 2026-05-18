@@ -1,4 +1,5 @@
-package com.sahmfood.pos.android.ui.transaction
+package com.sahmfood.pos.ui.transaction
+import com.sahmfood.pos.util.toMoneyString
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -27,28 +28,30 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.sahmfood.pos.android.di.TransactionAndroidViewModel
-import com.sahmfood.pos.android.ui.components.LoadingOverlay
-import com.sahmfood.pos.android.ui.components.SectionDivider
+import com.sahmfood.pos.ui.di.rememberTransactionViewModel
+import com.sahmfood.pos.presentation.transaction.TransactionViewModel
+import com.sahmfood.pos.ui.components.LoadingOverlay
+import com.sahmfood.pos.ui.components.SectionDivider
 import com.sahmfood.pos.domain.model.Transaction
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TransactionScreen(
-    viewModel: TransactionAndroidViewModel = koinViewModel()
+    modifier: Modifier = Modifier,
+    viewModel: TransactionViewModel = rememberTransactionViewModel()
 ) {
-    val state by viewModel.state.collectAsStateWithLifecycle()
+    val state by viewModel.state.collectAsState()
 
     Scaffold(
+        modifier = modifier,
         topBar = {
             TopAppBar(
                 title = { Text("Transaction History", fontWeight = FontWeight.Bold) },
@@ -69,7 +72,7 @@ fun TransactionScreen(
                     horizontalArrangement = Arrangement.SpaceAround
                 ) {
                     SummaryMetric("Transactions", "${state.transactionCount}")
-                    SummaryMetric("Revenue", "SAR ${String.format("%.2f", state.totalRevenue)}")
+                    SummaryMetric("Revenue", "SAR ${state.totalRevenue.toMoneyString()}")
                 }
             }
 
@@ -139,7 +142,7 @@ private fun TransactionCard(tx: Transaction) {
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    "SAR ${String.format("%.2f", tx.amount)}",
+                    "SAR ${tx.amount.toMoneyString()}",
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
                     style = MaterialTheme.typography.titleMedium
