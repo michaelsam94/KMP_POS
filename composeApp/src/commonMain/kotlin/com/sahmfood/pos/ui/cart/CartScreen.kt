@@ -2,7 +2,6 @@ package com.sahmfood.pos.ui.cart
 import com.sahmfood.pos.util.toMoneyString
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,9 +12,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -39,6 +41,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -116,8 +119,9 @@ fun CartScreen(
         },
         snackbarHost = { SnackbarHost(snackbar) },
         floatingActionButton = {
+            val canAddItems = !state.isLoading && state.order != null
             FloatingActionButton(
-                onClick       = { showProductPicker = true },
+                onClick        = { if (canAddItems) showProductPicker = true },
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
                 Icon(Icons.Default.Add, "Add Product", tint = MaterialTheme.colorScheme.onPrimary)
@@ -203,8 +207,12 @@ fun CartScreen(
     if (showProductPicker) {
         ProductPickerDialog(
             onProductSelected = { product ->
-                viewModel.addProductToCart(product)
-                showProductPicker = false
+                if (state.order != null) {
+                    viewModel.addProductToCart(product)
+                    showProductPicker = false
+                } else {
+                    scope.launch { snackbar.showSnackbar("Order not ready yet — try again") }
+                }
             },
             onDismiss = { showProductPicker = false }
         )
@@ -277,25 +285,27 @@ private fun ProductPickerDialog(
                         }
                     }
                 }
-                LazyColumn(contentPadding = PaddingValues(vertical = 8.dp)) {
-                    val filtered = DemoCatalog.products.filter { product ->
-                        (categories[selectedTab] == "All" || product.category == categories[selectedTab]) &&
-                        (searchQuery.isBlank() || product.name.contains(searchQuery, ignoreCase = true))
-                    }
-                    items(filtered) { product ->
-                        Card(
-                            modifier  = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 3.dp)
-                                .clickable { onProductSelected(product) },
-                            colors    = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant
-                            )
+                val filtered = DemoCatalog.products.filter { product ->
+                    (categories[selectedTab] == "All" || product.category == categories[selectedTab]) &&
+                    (searchQuery.isBlank() || product.name.contains(searchQuery, ignoreCase = true))
+                }
+                Column(
+                    modifier = Modifier
+                        .heightIn(max = 360.dp)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    filtered.forEach { product ->
+                        Surface(
+                            onClick = { onProductSelected(product) },
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            modifier = Modifier.fillMaxWidth()
                         ) {
                             Row(
                                 modifier = Modifier.padding(12.dp).fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment     = Alignment.CenterVertically
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(product.name, fontWeight = FontWeight.SemiBold)

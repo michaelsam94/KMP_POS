@@ -2,6 +2,7 @@ package com.sahmfood.pos.data.hardware
 
 import com.sahmfood.pos.domain.model.Order
 import com.sahmfood.pos.domain.model.Transaction
+import com.sahmfood.pos.util.toDisplayDateTime
 import com.sahmfood.pos.util.toMoneyString
 import kotlinx.coroutines.delay
 
@@ -30,7 +31,7 @@ class MockReceiptPrinter : ReceiptPrinter {
             add("          SAHM FOOD POS SYSTEM          ")
             add("========================================")
             add("Receipt  : ${transaction.receiptNumber}")
-            add("Date     : ${transaction.paidAt}")
+            add("Date     : ${transaction.paidAt.toDisplayDateTime()}")
             if (order.tableNumber.isNotBlank()) add("Table    : ${order.tableNumber}")
             if (order.cashierId.isNotBlank())   add("Cashier  : ${order.cashierId}")
             add("----------------------------------------")

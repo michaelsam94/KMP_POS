@@ -39,8 +39,7 @@ import com.sahmfood.pos.presentation.transaction.TransactionViewModel
 import com.sahmfood.pos.ui.components.LoadingOverlay
 import com.sahmfood.pos.ui.components.SectionDivider
 import com.sahmfood.pos.domain.model.Transaction
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
+import com.sahmfood.pos.util.toDisplayDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -114,7 +113,6 @@ private fun SummaryMetric(label: String, value: String) {
 
 @Composable
 private fun TransactionCard(tx: Transaction) {
-    val dt = tx.paidAt.toLocalDateTime(TimeZone.currentSystemDefault())
     Card(
         modifier  = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
         shape     = RoundedCornerShape(12.dp),
@@ -134,7 +132,7 @@ private fun TransactionCard(tx: Transaction) {
                 Text(tx.receiptNumber, fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleSmall)
                 Text(
-                    "${dt.year}-${dt.monthNumber.toString().padStart(2,'0')}-${dt.dayOfMonth.toString().padStart(2,'0')}  ${dt.hour.toString().padStart(2,'0')}:${dt.minute.toString().padStart(2,'0')}",
+                    tx.paidAt.toDisplayDateTime(),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

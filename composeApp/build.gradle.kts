@@ -8,6 +8,16 @@ plugins {
     alias(libs.plugins.compose.compiler)
 }
 
+// Keep Compose artifacts on one version (material3 must match runtime/ui on iOS).
+configurations.configureEach {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "org.jetbrains.compose") {
+            useVersion(libs.versions.compose.multiplatform.get())
+            because("Align Compose Multiplatform artifacts for native iOS linkage")
+        }
+    }
+}
+
 kotlin {
     androidTarget {
         @OptIn(ExperimentalKotlinGradlePluginApi::class)

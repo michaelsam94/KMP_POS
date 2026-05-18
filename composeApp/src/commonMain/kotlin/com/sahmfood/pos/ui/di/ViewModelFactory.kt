@@ -2,7 +2,6 @@ package com.sahmfood.pos.ui.di
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import com.sahmfood.pos.data.hardware.MockPaymentTerminal
 import com.sahmfood.pos.data.hardware.MockReceiptPrinter
 import com.sahmfood.pos.domain.usecase.AddItemToCartUseCase
@@ -27,7 +26,6 @@ object CartViewModelStore {
 
 @Composable
 fun rememberCartViewModel(): CartViewModel {
-    val scope = rememberCoroutineScope()
     val createOrder: CreateOrderUseCase = koinInject()
     val addItem: AddItemToCartUseCase = koinInject()
     val removeItem: RemoveItemFromCartUseCase = koinInject()
@@ -36,63 +34,60 @@ fun rememberCartViewModel(): CartViewModel {
     val scanBarcode: ScanBarcodeUseCase = koinInject()
     val orderRepository: OrderRepository = koinInject()
 
-    return remember {
+    return remember(createOrder, addItem, removeItem, updateQuantity, calculateTotal, scanBarcode, orderRepository) {
         CartViewModelStore.instance ?: CartViewModel(
-            createOrder       = createOrder,
-            addItem           = addItem,
-            removeItem        = removeItem,
-            updateQuantity    = updateQuantity,
-            calculateTotal    = calculateTotal,
-            scanBarcode       = scanBarcode,
-            orderRepository   = orderRepository,
-            scope             = scope
+            createOrder     = createOrder,
+            addItem         = addItem,
+            removeItem      = removeItem,
+            updateQuantity  = updateQuantity,
+            calculateTotal  = calculateTotal,
+            scanBarcode     = scanBarcode,
+            orderRepository = orderRepository,
+            scope           = AppViewModelScope.scope
         ).also { CartViewModelStore.instance = it }
     }
 }
 
 @Composable
 fun rememberPaymentViewModel(): PaymentViewModel {
-    val scope = rememberCoroutineScope()
     val orderRepository: OrderRepository = koinInject()
     val processPayment: ProcessPaymentUseCase = koinInject()
     val calculateTotal: CalculateOrderTotalUseCase = koinInject()
     val receiptPrinter: MockReceiptPrinter = koinInject()
     val paymentTerminal: MockPaymentTerminal = koinInject()
 
-    return remember {
+    return remember(orderRepository, processPayment, calculateTotal, receiptPrinter, paymentTerminal) {
         PaymentViewModel(
             orderRepository = orderRepository,
             processPayment  = processPayment,
             calculateTotal  = calculateTotal,
             receiptPrinter  = receiptPrinter,
             paymentTerminal = paymentTerminal,
-            scope           = scope
+            scope           = AppViewModelScope.scope
         )
     }
 }
 
 @Composable
 fun rememberOrderListViewModel(): OrderListViewModel {
-    val scope = rememberCoroutineScope()
     val orderRepository: OrderRepository = koinInject()
 
-    return remember {
+    return remember(orderRepository) {
         OrderListViewModel(
             orderRepository = orderRepository,
-            scope           = scope
+            scope           = AppViewModelScope.scope
         )
     }
 }
 
 @Composable
 fun rememberTransactionViewModel(): TransactionViewModel {
-    val scope = rememberCoroutineScope()
     val getHistory: GetTransactionHistoryUseCase = koinInject()
 
-    return remember {
+    return remember(getHistory) {
         TransactionViewModel(
             getHistory = getHistory,
-            scope      = scope
+            scope      = AppViewModelScope.scope
         )
     }
 }
