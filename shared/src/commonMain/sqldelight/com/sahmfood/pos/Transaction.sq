@@ -1,0 +1,36 @@
+CREATE TABLE IF NOT EXISTS TransactionEntity (
+    id              TEXT NOT NULL PRIMARY KEY,
+    orderId         TEXT NOT NULL,
+    amount          REAL NOT NULL,
+    paymentMethod   TEXT NOT NULL,
+    status          TEXT NOT NULL,
+    paidAt          INTEGER NOT NULL,  -- epoch millis
+    receiptNumber   TEXT NOT NULL,
+    cashierId       TEXT NOT NULL DEFAULT '',
+    change          REAL NOT NULL DEFAULT 0.0,
+    referenceNumber TEXT NOT NULL DEFAULT '',
+    isSynced        INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE INDEX IF NOT EXISTS idx_transaction_order    ON TransactionEntity(orderId);
+CREATE INDEX IF NOT EXISTS idx_transaction_paidAt   ON TransactionEntity(paidAt DESC);
+
+upsertTransaction:
+INSERT OR REPLACE INTO TransactionEntity
+    (id, orderId, amount, paymentMethod, status, paidAt, receiptNumber, cashierId, change, referenceNumber, isSynced)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+selectTransactionById:
+SELECT * FROM TransactionEntity WHERE id = ? LIMIT 1;
+
+selectTransactionByOrderId:
+SELECT * FROM TransactionEntity WHERE orderId = ? LIMIT 1;
+
+selectAllTransactions:
+SELECT * FROM TransactionEntity ORDER BY paidAt DESC;
+
+markSynced:
+UPDATE TransactionEntity SET isSynced = 1 WHERE id = ?;
+
+selectPendingSync:
+SELECT * FROM TransactionEntity WHERE isSynced = 0 AND status = 'SUCCESS';

@@ -1,0 +1,39 @@
+CREATE TABLE IF NOT EXISTS SyncQueueEntity (
+    id              TEXT NOT NULL PRIMARY KEY,
+    entityType      TEXT NOT NULL,
+    entityId        TEXT NOT NULL,
+    payload         TEXT NOT NULL,
+    status          TEXT NOT NULL DEFAULT 'PENDING',
+    retryCount      INTEGER NOT NULL DEFAULT 0,
+    createdAt       INTEGER NOT NULL,
+    lastAttemptAt   INTEGER,
+    errorMessage    TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_sync_status ON SyncQueueEntity(status);
+
+enqueue:
+INSERT OR IGNORE INTO SyncQueueEntity
+    (id, entityType, entityId, payload, status, retryCount, createdAt)
+VALUES (?, ?, ?, ?, 'PENDING', 0, ?);
+
+selectPending:
+SELECT * FROM SyncQueueEntity
+WHERE status = 'PENDING' OR status = 'FAILED'
+ORDER BY createdAt ASC;
+
+updateStatus:
+UPDATE SyncQueueEntity
+SET status = ?, errorMessage = ?, lastAttemptAt = ?
+WHERE id = ?;
+
+incrementRetry:
+UPDATE SyncQueueEntity
+SET retryCount = retryCount + 1, lastAttemptAt = ?
+WHERE id = ?;
+
+deleteSucceeded:
+DELETE FROM SyncQueueEntity WHERE status = 'SUCCESS';
+
+selectAll:
+SELECT * FROM SyncQueueEntity ORDER BY createdAt ASC;
